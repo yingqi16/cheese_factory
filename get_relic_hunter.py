@@ -7,8 +7,12 @@ from dotenv import load_dotenv
 import os
 
 ## to call data from env
-load_dotenv()
-
+# Get the path to the current file (script.py)
+current_path = Path(__file__).parent
+# Construct the relative path to the .env file
+dotenv_path = current_path / 'dev' / '.env'
+# Load the environment variables from the specified .env file
+load_dotenv(dotenv_path)
 
 location = requests.get("https://api.mouse.rip/relic-hunter").json()
 location_df = pd.json_normalize(location)
@@ -17,7 +21,8 @@ location_df = location_df.loc[:,["date","id", "name", "article", "region", "titl
 location_list =list( location_df.iloc[0])
 
 try:
-    cnx = mysql.connector.connect(user=os.getenv('MYSQL_DB_USER'), password=os.getenv('MYSQL_DB_PASSWORD'), host=os.getenv('MYSQL_DB_HOST'), database=os.getenv('MYSQL_DB_NAME'))
+    cnx = mysql.connector.connect(user=os.getenv('MYSQL_USER'), password=os.getenv('123456'), host=os.getenv('MYSQL_LOCAL_HOST'), database=os.getenv('MYSQL_DB_NAME'))
+    print(cnx)
 except mysql.connector.Error as err:
   if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
     print("Something is wrong with your user name or password")
