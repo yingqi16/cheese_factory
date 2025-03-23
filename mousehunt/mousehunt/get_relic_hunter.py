@@ -5,23 +5,47 @@ import mysql.connector
 from mysql.connector import errorcode
 from dotenv import load_dotenv
 import os
+from pathlib import Path
 
 ## to call data from env
 # Get the path to the current file (script.py)
-current_path = Path(__file__).parent
+# Path(__file__).parent points to the directory that contains the env file
+main_path = Path(__file__).parent.parent.parent
 # Construct the relative path to the .env file
-dotenv_path = current_path / 'dev' / '.env'
+dotenv_path = main_path / 'dev' / '.env'
 # Load the environment variables from the specified .env file
 load_dotenv(dotenv_path)
+
+# # certificate for MYSQL docker
+ssl_ca = f'{main_path}/dev/mysql_pem/ca.pem'         
+ssl_cert = f'{main_path}/dev/mysql_pem/server-cert.pem'    
+ssl_key = f'{main_path}/dev/mysql_pem/server-key.pem'
+
+# MySQL connection configuration
+config = {
+    'user': os.getenv('MYSQL_USER'),
+    'password': os.getenv('MYSQL_PASSWORD'),
+    'host': os.getenv('MYSQL_LOCAL_HOST'),  # Use the container's IP or hostname if accessing MySQL container from another container
+    'database': os.getenv('MYSQL_DB_NAME'),
+    # 'client_flags': [mysql.connector.ClientFlag.SSL],
+    'ssl_ca': ssl_ca,
+    'ssl_cert': ssl_cert,
+    'ssl_key': ssl_key
+}
 
 location = requests.get("https://api.mouse.rip/relic-hunter").json()
 location_df = pd.json_normalize(location)
 location_df['date'] = time.strftime('%Y%m%d', time.gmtime())
+if(location_df.loc[0, "id"] == "unknown"):
+    location_df = location_df.loc[:,["date","id", "name"]]
+    location_df["article"] = "unknown"
+    location_df["region"] = "unknown"
+    location_df["title"] = "unknown"
 location_df = location_df.loc[:,["date","id", "name", "article", "region", "title"]]
 location_list =list( location_df.iloc[0])
 
 try:
-    cnx = mysql.connector.connect(user=os.getenv('MYSQL_USER'), password=os.getenv('123456'), host=os.getenv('MYSQL_LOCAL_HOST'), database=os.getenv('MYSQL_DB_NAME'))
+    cnx = mysql.connector.connect(**config)
     print(cnx)
 except mysql.connector.Error as err:
   if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:

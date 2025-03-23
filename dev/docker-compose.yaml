@@ -8,7 +8,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "${MYSQL_LOCAL_HOST}:${MYSQL_CONTAINER_PORT}"
+      - ${MYSQL_LOCAL_HOST}:${MYSQL_LOCAL_PORT}:${MYSQL_CONTAINER_PORT}
     volumes:
       - mh_data:/var/lib/mysql
       - ./mousehunt-db:/docker-entrypoint-initdb.d
